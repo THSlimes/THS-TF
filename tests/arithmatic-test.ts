@@ -5,13 +5,17 @@ export const test1 = new Test("Addition", expect => {
     expect(2 + 2).toBe(4);
     expect(4 + 4).toBe(8);
     expect(8 + 8).toBe(16);
-    expect(8 + - 2).toBe(10);
+
+    expect(8 + -2).toBe(6);
+    expect(8 + -2).toNotBe(10);
 });
 
 export const test2 = new Test("Subtraction", expect => {
     expect(3 - 2).toBe(1);
+    expect(3 - 2).toNotBe(2);
 });
 
 export const test3 = new Test("Multiplication", expect => {
-    expect(3 * 5).toBe(14);
+    expect(3 * 5).toBe(15);
+    expect(3 * 5).toNotBe(20);
 });

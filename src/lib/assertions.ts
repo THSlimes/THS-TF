@@ -1,4 +1,19 @@
+function format(val:any):string {
+    if (typeof val === "string") return `"${val}"`;
+    else if (typeof val === "object") {
+        if (Array.isArray(val)) {
+            return `[${val.map(v => format(v)).join(", ")}]`;
+        }
+        else {
+            const entries = Object.entries(val).map(([k, v]) => `${format(k)}: ${format(v)}`);
+            return `{ ${entries.join(", ")} }`
+        }
+    }
+    else return String(val);
+}
+
 abstract class ValueAssertion<T extends ValueAssertion.Assertable> {
+
 
     protected readonly val:T;
     private readonly resultsPool:ValueAssertion.Result[];
@@ -18,7 +33,7 @@ abstract class ValueAssertion<T extends ValueAssertion.Assertable> {
             status: "pass"
         } : {
             status: "fail",
-            reason: `expected value to be ${expected?.toString()}, but was actually ${this.val?.toString()}`
+            reason: `expected value to be ${format(expected)}, but was actually ${format(this.val)}`
         });
     }
 
@@ -27,7 +42,7 @@ abstract class ValueAssertion<T extends ValueAssertion.Assertable> {
             status: "pass"
         } : {
             status: "fail",
-            reason: `expected value not to be ${notExpected?.toString()}, but it was`
+            reason: `expected value not to be ${format(notExpected)}, but it was`
         });
     }
 
@@ -46,6 +61,31 @@ class PrimitiveValueAssertion<P extends Primitive> extends ValueAssertion<P> {
     
 }
 
+function deepEquals(val:any, expected:any):boolean {
+    if (val === expected) return true; // shortcut
+    else if (typeof val !== typeof expected) return false; // types must match
+    else if (typeof val === "object" && typeof expected === "object") {
+        if (Array.isArray(val)) {
+            return Array.isArray(expected)
+                && val.length === expected.length
+                && val.every((e, i) => deepEquals(e, expected[i]));
+        }
+        else if (val instanceof Date) {
+            return expected instanceof Date
+                && val.getTime() == expected.getTime();
+        }
+        else {
+            const valKeys = Object.keys(val);
+            const expectedKeys = Object.keys(expected);
+
+            return valKeys.length === expectedKeys.length // same number of properties
+                && valKeys.every(k => k in expected) // keys match
+                && valKeys.every(k => deepEquals(val[k], expected[k])); // values of keys match
+        }
+    }
+    else return false;
+}
+
 class ObjectValueAssertion<O extends object> extends ValueAssertion<O> {
 
     public constructor(val:O, resultsPool:ValueAssertion.Result[]) {
@@ -53,8 +93,7 @@ class ObjectValueAssertion<O extends object> extends ValueAssertion<O> {
     }
 
     protected override checkEq(expected:O):boolean {
-        // TODO: implement
-        return false;
+        return deepEquals(this.val, expected);
     }
 
 }
