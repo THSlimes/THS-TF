@@ -5,6 +5,7 @@ import colors from "colors";
 import Test from "./lib/Test";
 import { ValueAssertion } from "./lib/assertions";
 import console from "node:console";
+import path from "node:path";
 colors.enable();
 
 const KNOWN_CMD_ARGS = new Set(["--dir", "-d", "--verbose", "-v", "--strict", "-s"]);
@@ -35,10 +36,12 @@ function getNamedCommandLineArguments():Record<string,string> {
 type TestDir = { [k:string]:TestDir|Test[] };
 /**
  * Extracts all `Test` objects from the given directory.
- * @param dirPath path to directory
+ * @param dirPath path to directory (if relative, it is interpreted relative to the CWD)
  * @returns Promise that resolves with the extracted tests
  */
 function findTests(dirPath:string):Promise<TestDir> {
+    if (!path.isAbsolute(dirPath)) dirPath = path.normalize(`${process.cwd()}/${dirPath}`);
+
     return Promise.all(fs.readdirSync(dirPath).map(filename => {
         const filepath = `${dirPath}/${filename}`;
 
@@ -67,6 +70,7 @@ function findTests(dirPath:string):Promise<TestDir> {
     });
 }
 
+
 type TestResults = { [name:string]:TestResults|ValueAssertion.Result[]|Test.ExecutionError };
 function runTests(testDir:TestDir|Test[], prefix=""):Promise<TestResults> {
     if (Array.isArray(testDir)) {
@@ -88,18 +92,21 @@ function runTests(testDir:TestDir|Test[], prefix=""):Promise<TestResults> {
     }
 }
 
-type ResultStatus = "pass"|"fail"|"error";
+
+type ResultStatus = "pass"|"fail"|"error"|"warning";
 namespace ResultsStatus {
     export function style(str:string, status:ResultStatus) {
-        if (str.startsWith('/')) str = str.endsWith(".ts") ? str.italic : colors.bold(str.italic);
+        if (str.startsWith('/')) str = str.endsWith(".ts") ? str.italic : colors.bold(str.italic); // style paths
 
         switch (status) {
             case "pass": return str.green;
             case "fail": return str.red;
             case "error": return str.bgRed;
+            case "warning": return str.yellow;
         }
     }
 }
+
 function getResultStatus(results:TestResults|ValueAssertion.Result[]|Test.ExecutionError):ResultStatus {
     if (Array.isArray(results)) return results.some(res => res.status === "fail") ? "fail" : "pass";
     else if (results instanceof Test.ExecutionError) return "error";
@@ -111,27 +118,31 @@ function getResultStatus(results:TestResults|ValueAssertion.Result[]|Test.Execut
     }
 }
 
-function logTestResults(results:TestResults|ValueAssertion.Result[]|Test.ExecutionError, logger=console, prefix=""):void {
-    if (Array.isArray(results)) results.forEach((res, i) => { // is result from single test
-        if (res.status === "pass") {
-            logger.log(prefix, ResultsStatus.style(
-                res.name ?
-                    `${i+1}. (${res.name}) ✅ Passed` :
-                    `${i+1}. ✅ Passed`,
-                "pass"
-            ));
 
-        }
-        else logger.log(
-            prefix,
-            ResultsStatus.style(
-                res.name ?
-                    `${i + 1}. (${res.name}) ❌ Failed ${res.reason}` :
-                    `${i + 1}. ❌ Failed ${res.reason}`,
-                "fail"
-            )
-        );
-    });
+function logTestResults(results:TestResults|ValueAssertion.Result[]|Test.ExecutionError, logger=console, prefix=""):void {
+    if (Array.isArray(results)) {
+        if (results.length === 0) console.log(prefix, ResultsStatus.style("- ⚠️ No assertions found", "warning"));
+        else results.forEach((res, i) => { // is result from single test
+            if (res.status === "pass") {
+                logger.log(prefix, ResultsStatus.style(
+                    res.name ?
+                        `${i+1}. (${res.name}) ✅ Passed` :
+                        `${i+1}. ✅ Passed`,
+                    "pass"
+                ));
+    
+            }
+            else logger.log(
+                prefix,
+                ResultsStatus.style(
+                    res.name ?
+                        `${i + 1}. (${res.name}) ❌ Failed ${res.reason}` :
+                        `${i + 1}. ❌ Failed ${res.reason}`,
+                    "fail"
+                )
+            );
+        });
+    }
     else if (results instanceof Test.ExecutionError) {
         logger.log(prefix, ResultsStatus.style(`⛔ Stopped (${results.message})`, "error"));
     }
@@ -143,7 +154,7 @@ function logTestResults(results:TestResults|ValueAssertion.Result[]|Test.Executi
     }
 }
 
-function doTests(settings:Config.Settings) {
+function doTests(settings:Config.Settings):Promise<void> {
     const unknownArgNames = Object.keys(CMD_ARGS).filter(n => !KNOWN_CMD_ARGS.has(n));
     if (unknownArgNames.length !== 0) { // warn of unknown CMD arguments
         const msg = `Unknown command line argument(s): ${unknownArgNames.join(", ")}`.yellow;
@@ -154,7 +165,7 @@ function doTests(settings:Config.Settings) {
     if (!fs.existsSync(settings.testDir)) throw new Error(`path "${settings.testDir}" does not exist.`);
     else if (!fs.statSync(settings.testDir).isDirectory) throw new Error(`path "${settings.testDir}" exists, but is not a directory.`);
     
-    findTests(settings.testDir)
+    return findTests(settings.testDir)
     .then(tests => runTests(tests))
     .then(result => logTestResults(result, console));
 }
@@ -171,3 +182,5 @@ const TEST_SETTINGS:Config.Settings = {
 };
 
 doTests(TEST_SETTINGS);
+
+console.log(process.cwd());
