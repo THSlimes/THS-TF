@@ -113,8 +113,24 @@ function getResultStatus(results:TestResults|ValueAssertion.Result[]|Test.Execut
 
 function logTestResults(results:TestResults|ValueAssertion.Result[]|Test.ExecutionError, logger=console, prefix=""):void {
     if (Array.isArray(results)) results.forEach((res, i) => { // is result from single test
-        if (res.status === "pass") logger.log(prefix, ResultsStatus.style(`${i+1}. ✅ Passed`, "pass"));
-        else logger.log(prefix, ResultsStatus.style(`${i+1}. ❌ Failed ${res.reason}`, "fail"));
+        if (res.status === "pass") {
+            logger.log(prefix, ResultsStatus.style(
+                res.name ?
+                    `${i+1}. (${res.name}) ✅ Passed` :
+                    `${i+1}. ✅ Passed`,
+                "pass"
+            ));
+
+        }
+        else logger.log(
+            prefix,
+            ResultsStatus.style(
+                res.name ?
+                    `${i + 1}. (${res.name}) ❌ Failed ${res.reason}` :
+                    `${i + 1}. ❌ Failed ${res.reason}`,
+                "fail"
+            )
+        );
     });
     else if (results instanceof Test.ExecutionError) {
         logger.log(prefix, ResultsStatus.style(`⛔ Stopped (${results.message})`, "error"));

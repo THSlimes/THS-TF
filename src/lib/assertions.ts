@@ -18,7 +18,15 @@ abstract class ValueAssertion<T extends ValueAssertion.Assertable> {
     protected readonly val:T;
     private readonly resultsPool:ValueAssertion.Result[];
     protected addToResults(res:ValueAssertion.Result) {
+        if (this.name) res.name = this.name;
         this.resultsPool.push(res);
+    }
+
+    private name?:string;
+    /** Assigns a name to this assertion. */
+    public named(name:string) {
+        this.name = name;
+        return this as Omit<this, "named">;
     }
 
     public constructor(val:T, resultsPool:ValueAssertion.Result[]) {
@@ -30,7 +38,7 @@ abstract class ValueAssertion<T extends ValueAssertion.Assertable> {
 
     public toBe(expected:T):void {
         this.addToResults(this.checkEq(expected) ? {
-            status: "pass"
+            status: "pass",
         } : {
             status: "fail",
             reason: `expected value to be ${format(expected)}, but was actually ${format(this.val)}`
@@ -39,7 +47,7 @@ abstract class ValueAssertion<T extends ValueAssertion.Assertable> {
 
     public toNotBe(notExpected:T) {
         this.addToResults(!this.checkEq(notExpected) ? {
-            status: "pass"
+            status: "pass",
         } : {
             status: "fail",
             reason: `expected value not to be ${format(notExpected)}, but it was`
@@ -104,8 +112,10 @@ export namespace ValueAssertion {
 
     export type Result = {
         status:"pass",
+        name?:string
     } | {
         status:"fail",
+        name?:string,
         reason:string
     };
 
@@ -130,7 +140,7 @@ export namespace ExpectFunction {
             else if (typeof val === "undefined") return new PrimitiveValueAssertion(val, pool) as ValueAssertion.For<T>;
             else if (val == null) return new PrimitiveValueAssertion<null>(val, pool) as ValueAssertion.For<T>;
             else if (typeof val === "object") return new ObjectValueAssertion(val, pool) as ValueAssertion.For<T>;
-            else throw new Error(`no value assertion type found for ${String(val)}`);
+            else throw new Error(`no value assertion type found for ${String(val)}`); // failsafe
         }, pool];
     }
 }
