@@ -77,7 +77,7 @@ function runTests(testDir:TestDir|Test[], prefix=""):Promise<TestResults> {
         return Promise.all(testDir.map(test => test.run().catch(err => err instanceof Test.ExecutionError ? err : new Test.ExecutionError(err))))
             .then(results => {
                 const out:TestResults = {};
-                for (let i = 0; i < results.length; i ++) out[testDir[i].name] = results[i];
+                for (let i = 0; i < results.length; i++) out[testDir[i].name] = results[i];
                 return out;
             });
     }
@@ -86,7 +86,7 @@ function runTests(testDir:TestDir|Test[], prefix=""):Promise<TestResults> {
         return Promise.all(entries.map(entry => runTests(entry[1])))
             .then(results => {
                 const out:TestResults = {};
-                for (let i= 0; i < results.length; i ++) out[entries[i][0]] = results[i];
+                for (let i= 0; i < results.length; i++) out[entries[i][0]] = results[i];
                 return out;
             })
     }
@@ -121,7 +121,7 @@ function getResultStatus(results:TestResults|ValueAssertion.Result[]|Test.Execut
 
 function logTestResults(results:TestResults|ValueAssertion.Result[]|Test.ExecutionError, logger=console, prefix=""):void {
     if (Array.isArray(results)) {
-        if (results.length === 0) console.log(prefix, ResultsStatus.style("- ⚠️ No assertions found", "warning"));
+        if (results.length === 0) logger.log(prefix, ResultsStatus.style("- ⚠️ No assertions found", "warning"));
         else results.forEach((res, i) => { // is result from single test
             if (res.status === "pass") {
                 logger.log(prefix, ResultsStatus.style(
@@ -182,5 +182,3 @@ const TEST_SETTINGS:Config.Settings = {
 };
 
 doTests(TEST_SETTINGS);
-
-console.log(process.cwd());
