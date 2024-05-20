@@ -13,6 +13,7 @@ namespace format {
      */
     export function single(val:any):string {
         if (typeof val === "string") return `"${val}"`;
+        else if (typeof val === "bigint") return `${val}n`;
         else if (typeof val === "object") {
             if (Array.isArray(val)) {
                 return `[${val.map(v => format(v)).join(", ")}]`;
@@ -96,7 +97,9 @@ export class ValueAssertion<T> {
 }
 
 
-function isPrime(n:number):boolean|number {
+function isPrime(n:number|bigint):boolean|number {
+    if (typeof n === "bigint") n = Number(n);
+
     if (n <= 1) return false;
     else {
         for (let i = 3; i <= n**.5; i += 2) {
@@ -163,6 +166,82 @@ class NumberValueAssertion extends ValueAssertion<number> {
     public toDivide(dividend:number) {
         this.addToResults(
             dividend % this.val === 0 ?
+                { status: "pass" } :
+                { status: "fail", reason: format`expected value to divide ${dividend}, but ${this.val} doesn't` }
+        );
+    }
+
+    public toBePrime() {
+        const res = isPrime(this.val);
+        this.addToResults(
+            isPrime(this.val) === true ?
+                { status: "pass" } :
+                {
+                    status: "fail",
+                    reason: format`expected value to be prime, but ${this.val} isn't` + (typeof res === "number" ? `, because it is divisible by ${res}` : "")
+                }
+        );
+    }
+
+    public toBeComposite() {
+        this.addToResults(
+            isPrime(this.val) === true ?
+                { status: "fail", reason: format`expected value to be composite, but ${this.val} is prime` } :
+                { status: "pass" }
+        );
+    }
+
+}
+
+class BigintValueAssertion extends ValueAssertion<bigint> {
+
+    constructor(val:bigint, resultsPool:ValueAssertion.Result[]) {
+        super(val, resultsPool);
+    }
+
+    public toBeLessThan(upperBound:bigint) {
+        this.addToResults(
+            this.val < upperBound ?
+                { status: "pass" } :
+                { status: "fail", reason: format`expected value < ${upperBound}, but ${this.val} isn't` }
+        );
+    }
+
+    public toBeAtMost(upperBound:bigint) {
+        this.addToResults(
+            this.val <= upperBound ?
+                { status: "pass" } :
+                { status: "fail", reason: format`expected value <= ${upperBound}, but ${this.val} isn't` }
+        );
+    }
+
+    public toBeGreaterThan(lowerBound:bigint) {
+        this.addToResults(
+            this.val > lowerBound ?
+                { status: "pass" } :
+                { status: "fail", reason: format`expected value > ${lowerBound}, but ${this.val} isn't` }
+        );
+    }
+
+    public toBeAtLeast(lowerBound:bigint) {
+        this.addToResults(
+            this.val >= lowerBound ?
+                { status: "pass" } :
+                { status: "fail", reason: format`expected value >= ${lowerBound}, but ${this.val} isn't` }
+        );
+    }
+
+    public toBeDivisibleBy(divisor:bigint) {
+        this.addToResults(
+            this.val % divisor === 0n ?
+                { status: "pass" } :
+                { status: "fail", reason: format`expected value to be divisible by ${divisor}, but ${this.val} isn't` }
+        );
+    }
+
+    public toDivide(dividend:bigint) {
+        this.addToResults(
+            dividend % this.val === 0n ?
                 { status: "pass" } :
                 { status: "fail", reason: format`expected value to divide ${dividend}, but ${this.val} doesn't` }
         );
@@ -260,10 +339,10 @@ export namespace ValueAssertion {
         reason:string
     };
 
-    export type For<T> = T extends number ?
-        NumberValueAssertion :
-        T extends string ?
-            StringValueAssertion :
+    export type For<T> =
+        T extends number ? NumberValueAssertion :
+        T extends bigint ? BigintValueAssertion :
+        T extends string ? StringValueAssertion :
             ValueAssertion<T>;
 
 }
@@ -274,11 +353,10 @@ export namespace ExpectFunction {
         const pool:ValueAssertion.Result[] = [];
         return [
             <T>(val:T) => (
-                typeof val === "number" ?
-                new NumberValueAssertion(val,pool) :
-                typeof val === "string" ?
-                    new StringValueAssertion(val, pool) :
-                    new ValueAssertion(val, pool)
+                typeof val === "number" ? new NumberValueAssertion(val, pool) :
+                typeof val === "bigint" ? new BigintValueAssertion(val, pool) :
+                typeof val === "string" ? new StringValueAssertion(val, pool) :
+                new ValueAssertion(val, pool)
             ) as ValueAssertion.For<T>,
             pool
         ];

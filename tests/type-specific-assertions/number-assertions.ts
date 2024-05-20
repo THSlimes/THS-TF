@@ -15,7 +15,7 @@ export const test2 = new Test("Greater than (or equal to)", expect => {
 export const test3 = new Test("Divisibility", expect => {
     expect(3).named("3 is an integer").toBeAnInteger();
     expect(111).named("111 is divisible by 37").toBeDivisibleBy(37);
-    expect(37).named("37 divides").toDivide(111);
+    expect(37).named("37 divides 111").toDivide(111);
     expect(37).named("37 is prime").toBePrime();
     expect(39).named("39 isn't prime").toBeComposite();
 });
