@@ -20,7 +20,7 @@ class Test {
                 resolve(pool);
             }
             catch (e) {
-                reject(new Test.ExecutionError(e));
+                reject(new Test.ExecutionError(pool.length, e));
             }
         });
     }
@@ -31,10 +31,14 @@ namespace Test {
 
     export class ExecutionError extends Error {
 
-        constructor(reason:any) {
+        public readonly assertionIndex:number;
+
+        constructor(assertionIndex:number, reason:any) {
             if (reason instanceof Error) reason = `${reason.name}: ${reason.message}`;
 
             super(reason);
+
+            this.assertionIndex = assertionIndex;
         }
 
     }

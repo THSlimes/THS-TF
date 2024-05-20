@@ -74,7 +74,7 @@ function findTests(dirPath:string):Promise<TestDir> {
 type TestResults = { [name:string]:TestResults|ValueAssertion.Result[]|Test.ExecutionError };
 function runTests(testDir:TestDir|Test[], prefix=""):Promise<TestResults> {
     if (Array.isArray(testDir)) {
-        return Promise.all(testDir.map(test => test.run().catch(err => err instanceof Test.ExecutionError ? err : new Test.ExecutionError(err))))
+        return Promise.all(testDir.map(test => test.run().catch(err => err instanceof Test.ExecutionError ? err : new Test.ExecutionError(-1, err))))
             .then(results => {
                 const out:TestResults = {};
                 for (let i = 0; i < results.length; i++) out[testDir[i].name] = results[i];
@@ -126,7 +126,7 @@ function logTestResults(results:TestResults|ValueAssertion.Result[]|Test.Executi
             if (res.status === "pass") {
                 logger.log(prefix, ResultsStatus.style(
                     res.name ?
-                        `${i+1}. (${res.name}) ✅ Passed` :
+                        `${i+1}. ✅ (${res.name}) Passed` :
                         `${i+1}. ✅ Passed`,
                     "pass"
                 ));
@@ -136,15 +136,15 @@ function logTestResults(results:TestResults|ValueAssertion.Result[]|Test.Executi
                 prefix,
                 ResultsStatus.style(
                     res.name ?
-                        `${i + 1}. (${res.name}) ❌ Failed ${res.reason}` :
-                        `${i + 1}. ❌ Failed ${res.reason}`,
+                        `${i + 1}. ❌ (${res.name}) Failed - ${res.reason}` :
+                        `${i + 1}. ❌ Failed - ${res.reason}`,
                     "fail"
                 )
             );
         });
     }
     else if (results instanceof Test.ExecutionError) {
-        logger.log(prefix, ResultsStatus.style(`⛔ Stopped (${results.message})`, "error"));
+        logger.log(prefix, ResultsStatus.style(`- ⛔ Stopped at assertion #${results.assertionIndex + 1} (${results.message})`, "error"));
     }
     else for (const name in results) {
         const val = results[name];

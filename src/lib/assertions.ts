@@ -14,7 +14,7 @@ namespace format {
     export function single(val:any):string {
         if (typeof val === "string") return `"${val}"`;
         else if (typeof val === "bigint") return `${val}n`;
-        else if (typeof val === "object") {
+        else if (typeof val === "object" && val !== null) {
             if (Array.isArray(val)) {
                 return `[${val.map(v => format(v)).join(", ")}]`;
             }
@@ -28,7 +28,7 @@ namespace format {
     }
 }
 
-
+type ToStringable = { toString():string };
 /**
  * `ValueAssertion` is a base class that handles checking certain properties of their value.
  * @param T type of value to check
@@ -38,14 +38,19 @@ export class ValueAssertion<T> {
     protected readonly val:T;
     private readonly resultsPool:ValueAssertion.Result[];
     protected addToResults(res:ValueAssertion.Result) {
-        if (this.name) res.name = this.name;
+        const name = this.name?.toString() ?? this.autoName?.toString();
+        if (name) res.name = name;
         this.resultsPool.push(res);
     }
 
-    private name?:string;
+    private name?:ToStringable;
+    /** Automatically generated name */
+    protected autoName?:ToStringable;
+    private _doAutoName = false;
     /** Assigns a name to this assertion. */
-    public named(name:string) {
-        this.name = name;
+    public named(name?:ToStringable) {
+        if (name === undefined) this._doAutoName = true;
+        else this.name = name;
         return this as Omit<this, "named">;
     }
 
@@ -55,6 +60,7 @@ export class ValueAssertion<T> {
     }
 
     public toBe(expected:T):void {
+        this.autoName = format`value === ${expected}`;
         this.addToResults(
             ValueAssertion.deepEquals(this.val, expected) ?
                 { status: "pass" } :
@@ -63,6 +69,7 @@ export class ValueAssertion<T> {
     }
 
     public toNotBe(notExpected:T) {
+        this.autoName = format`value !== ${notExpected}`;
         this.addToResults(
             !ValueAssertion.deepEquals(this.val, notExpected) ?
                 { status: "pass" } :
@@ -78,7 +85,7 @@ export class ValueAssertion<T> {
             if (Array.isArray(val)) {
                 return Array.isArray(expected)
                     && val.length === expected.length
-                    && val.every((e, i) => this.deepEquals(e, expected[i]));
+                    && val.every((e, i) => ValueAssertion.deepEquals(e, expected[i]));
             }
             else if (val instanceof Date) {
                 return expected instanceof Date && val.getTime() == expected.getTime();
@@ -97,10 +104,10 @@ export class ValueAssertion<T> {
 }
 
 
-function isPrime(n:number|bigint):boolean|number {
+function isPrime(n:number|bigint):true|number {
     if (typeof n === "bigint") n = Number(n);
 
-    if (n <= 1) return false;
+    if (n <= 1) return -1;
     else {
         for (let i = 3; i <= n**.5; i += 2) {
             if (n % i === 0) return i; // is divisible by i, not prime
@@ -116,6 +123,7 @@ class NumberValueAssertion extends ValueAssertion<number> {
     }
 
     public toBeLessThan(upperBound:number) {
+        this.autoName = format`value < ${upperBound}`;
         this.addToResults(
             this.val < upperBound ?
                 { status: "pass" } :
@@ -124,6 +132,7 @@ class NumberValueAssertion extends ValueAssertion<number> {
     }
 
     public toBeAtMost(upperBound:number) {
+        this.autoName = format`value <= ${upperBound}`;
         this.addToResults(
             this.val <= upperBound ?
                 { status: "pass" } :
@@ -132,6 +141,7 @@ class NumberValueAssertion extends ValueAssertion<number> {
     }
 
     public toBeGreaterThan(lowerBound:number) {
+        this.autoName = format`value > ${lowerBound}`;
         this.addToResults(
             this.val > lowerBound ?
                 { status: "pass" } :
@@ -140,6 +150,7 @@ class NumberValueAssertion extends ValueAssertion<number> {
     }
 
     public toBeAtLeast(lowerBound:number) {
+        this.autoName = format`value >= ${lowerBound}`;
         this.addToResults(
             this.val >= lowerBound ?
                 { status: "pass" } :
@@ -148,6 +159,7 @@ class NumberValueAssertion extends ValueAssertion<number> {
     }
 
     public toBeAnInteger() {
+        this.autoName = format`value is an integer`;
         this.addToResults(
             this.val % 1 === 0 ?
                 { status: "pass" } :
@@ -156,6 +168,7 @@ class NumberValueAssertion extends ValueAssertion<number> {
     }
 
     public toBeDivisibleBy(divisor:number) {
+        this.autoName = format`${divisor} divides value`;
         this.addToResults(
             this.val % divisor === 0 ?
                 { status: "pass" } :
@@ -164,6 +177,7 @@ class NumberValueAssertion extends ValueAssertion<number> {
     }
 
     public toDivide(dividend:number) {
+        this.autoName = format`value divides ${dividend}`;
         this.addToResults(
             dividend % this.val === 0 ?
                 { status: "pass" } :
@@ -172,18 +186,20 @@ class NumberValueAssertion extends ValueAssertion<number> {
     }
 
     public toBePrime() {
+        this.autoName = format`value is prime`;
         const res = isPrime(this.val);
         this.addToResults(
             isPrime(this.val) === true ?
                 { status: "pass" } :
                 {
                     status: "fail",
-                    reason: format`expected value to be prime, but ${this.val} isn't` + (typeof res === "number" ? `, because it is divisible by ${res}` : "")
+                    reason: format`expected value to be prime, but ${this.val} isn't because it is divisible by ${res}`
                 }
         );
     }
 
     public toBeComposite() {
+        this.autoName = format`value is composite`;
         this.addToResults(
             isPrime(this.val) === true ?
                 { status: "fail", reason: format`expected value to be composite, but ${this.val} is prime` } :
@@ -200,6 +216,7 @@ class BigintValueAssertion extends ValueAssertion<bigint> {
     }
 
     public toBeLessThan(upperBound:bigint) {
+        this.autoName = format`value < ${upperBound}`;
         this.addToResults(
             this.val < upperBound ?
                 { status: "pass" } :
@@ -208,6 +225,7 @@ class BigintValueAssertion extends ValueAssertion<bigint> {
     }
 
     public toBeAtMost(upperBound:bigint) {
+        this.autoName = format`value <= ${upperBound}`;
         this.addToResults(
             this.val <= upperBound ?
                 { status: "pass" } :
@@ -216,6 +234,7 @@ class BigintValueAssertion extends ValueAssertion<bigint> {
     }
 
     public toBeGreaterThan(lowerBound:bigint) {
+        this.autoName = format`value > ${lowerBound}`;
         this.addToResults(
             this.val > lowerBound ?
                 { status: "pass" } :
@@ -224,6 +243,7 @@ class BigintValueAssertion extends ValueAssertion<bigint> {
     }
 
     public toBeAtLeast(lowerBound:bigint) {
+        this.autoName = format`value >= ${lowerBound}`;
         this.addToResults(
             this.val >= lowerBound ?
                 { status: "pass" } :
@@ -232,6 +252,7 @@ class BigintValueAssertion extends ValueAssertion<bigint> {
     }
 
     public toBeDivisibleBy(divisor:bigint) {
+        this.autoName = format`${divisor} divides value`;
         this.addToResults(
             this.val % divisor === 0n ?
                 { status: "pass" } :
@@ -240,6 +261,7 @@ class BigintValueAssertion extends ValueAssertion<bigint> {
     }
 
     public toDivide(dividend:bigint) {
+        this.autoName = format`value divides ${dividend}`;
         this.addToResults(
             dividend % this.val === 0n ?
                 { status: "pass" } :
@@ -248,6 +270,7 @@ class BigintValueAssertion extends ValueAssertion<bigint> {
     }
 
     public toBePrime() {
+        this.autoName = format`value is prime`;
         const res = isPrime(this.val);
         this.addToResults(
             isPrime(this.val) === true ?
@@ -260,6 +283,7 @@ class BigintValueAssertion extends ValueAssertion<bigint> {
     }
 
     public toBeComposite() {
+        this.autoName = format`value is composite`;
         this.addToResults(
             isPrime(this.val) === true ?
                 { status: "fail", reason: format`expected value to be composite, but ${this.val} is prime` } :
@@ -269,7 +293,7 @@ class BigintValueAssertion extends ValueAssertion<bigint> {
 
 }
 
-
+type ParseIntRadix = 2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32;
 class StringValueAssertion extends ValueAssertion<string> {
 
     constructor(val:string, resultsPool:ValueAssertion.Result[]) {
@@ -277,6 +301,7 @@ class StringValueAssertion extends ValueAssertion<string> {
     }
 
     public toComeBefore(upperBound:string) {
+        this.autoName = format`value comes before ${upperBound}`;
         this.addToResults(
             this.val < upperBound ?
                 { status: "pass" } :
@@ -285,6 +310,7 @@ class StringValueAssertion extends ValueAssertion<string> {
     }
 
     public toComeAfter(lowerBound:string) {
+        this.autoName = format`value comes after ${lowerBound}`;
         this.addToResults(
             this.val > lowerBound ?
                 { status: "pass" } :
@@ -293,7 +319,9 @@ class StringValueAssertion extends ValueAssertion<string> {
     }
 
     public toBePalindromic() {
-        let rev = "";
+        this.autoName = format`value is palindromic`;
+
+        let rev = ""; // compute reversed string
         for (let i = this.val.length - 1; i >= 0; i--) rev += this.val[i];
 
         this.addToResults(
@@ -304,6 +332,7 @@ class StringValueAssertion extends ValueAssertion<string> {
     }
 
     public toContain(substring:string) {
+        this.autoName = format`value contains ${substring}`;
         this.addToResults(
             this.val.includes(substring) ?
                 { status: "pass" } :
@@ -311,21 +340,87 @@ class StringValueAssertion extends ValueAssertion<string> {
         );
     }
 
-    public toBeNumeric() {
-        this.addToResults(
-            Number.isNaN(Number.parseFloat(this.val)) ?
-                { status: "fail", reason: format`expected value to be numeric, but ${this.val} isn't` } :
-                { status: "pass" }
-        );
+    public toBeNumeric(radix?:ParseIntRadix) {
+        if (radix === undefined) {
+            this.autoName = format`value is numeric`;
+            this.addToResults( // generic parsing
+                Number.isNaN(Number.parseFloat(this.val)) ?
+                    { status: "fail", reason: format`expected value to be numeric, but ${this.val} isn't` } :
+                    { status: "pass" }
+            );
+        }
+        else {
+            this.autoName = format`value is base-${radix} numeric `;
+            const unrecognizedChar = this.val.split("").find(c => Number.isNaN(Number.parseInt(c, radix)));
+            this.addToResults( // integer parsing base `radix`
+                unrecognizedChar === undefined ?
+                    { status: "pass" } :
+                    {
+                        status: "fail",
+                        reason: format`${this.val} isn't numeric in base ${radix}, since it contains ${unrecognizedChar}`
+                    }
+            );
+        }
     }
 
     public toMatch(regExp:RegExp) {
+        this.autoName = format`value matches ${regExp}`;
         this.addToResults(
             regExp.test(this.val) ?
                 { status: "pass" } :
                 { status: "fail", reason: format`expected value to match ${regExp}, but ${this.val} doesn't` }
         );
     }
+}
+
+class ObjectValueAssertion<O extends object> extends ValueAssertion<O> {
+
+    constructor(val:O, resultsPool:ValueAssertion.Result[]) {
+        super(val, resultsPool);
+    }
+
+    public toHaveKey(key:keyof O) {
+        this.autoName = format`object has key ${key}`;
+        this.addToResults(
+            key in this.val ?
+                { status: "pass" } :
+                { status: "fail", reason: format`expected value to have key ${key}, but ${this.val} doesn't` }
+        );
+    }
+
+    public toHaveValue(value:O[keyof O]) {
+        this.autoName = format`object has value ${value}`;
+        this.addToResults(
+            Object.values(this.val).some(v => ObjectValueAssertion.deepEquals(v, value)) ?
+                { status: "pass" } :
+                { status: "fail", reason: format`expected value to have value ${value}, but ${this.val} doesn't` }
+        );
+    }
+
+    public toHaveEntry(key:keyof O, value:O[keyof O]) {
+        this.autoName = format`object has ${key} -> ${value}`;
+        this.addToResults(
+            key in this.val ?
+                ObjectValueAssertion.deepEquals(this.val[key], value) ?
+                    { status: "pass" } :
+                    { status: "fail", reason: format`value does have key ${key}, but it does not map to ${value}` } : // value mismatch
+                { status: "fail", reason: format`value does not have key ${key}` } // missing key
+        );
+    }
+
+    public toBeOfSize(numEntries:number) {
+        if (numEntries < 0) throw new TypeError(format`expected size ${numEntries} is not allowed to be negative`);
+        else if (numEntries % 1 !== 0) throw new TypeError(format`expected size ${numEntries} must be an integer`);
+
+        this.autoName = format`object has ${numEntries} entries`;
+        const valSize = Object.keys(this.val).length;
+        this.addToResults(
+            valSize === numEntries ?
+                { status: "pass" } :
+                { status: "fail", reason: format`expected value to have ${numEntries} entries, but ${this.val} has ${valSize}` }
+        );
+    }
+
 }
 
 export namespace ValueAssertion {
@@ -343,6 +438,7 @@ export namespace ValueAssertion {
         T extends number ? NumberValueAssertion :
         T extends bigint ? BigintValueAssertion :
         T extends string ? StringValueAssertion :
+        T extends object ? ObjectValueAssertion<T> :
             ValueAssertion<T>;
 
 }
@@ -356,6 +452,7 @@ export namespace ExpectFunction {
                 typeof val === "number" ? new NumberValueAssertion(val, pool) :
                 typeof val === "bigint" ? new BigintValueAssertion(val, pool) :
                 typeof val === "string" ? new StringValueAssertion(val, pool) :
+                typeof val === "object" && val !== null ? new ObjectValueAssertion(val, pool) :
                 new ValueAssertion(val, pool)
             ) as ValueAssertion.For<T>,
             pool
