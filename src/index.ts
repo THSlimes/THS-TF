@@ -71,7 +71,7 @@ function findTests(dirPath:string):Promise<TestDir> {
 }
 
 
-type TestResults = { [name:string]:TestResults|ValueAssertion.Result[]|Test.ExecutionError };
+type TestResults = { [name:string]:TestResults|ValueAssertion.ResultPool|Test.ExecutionError };
 function runTests(testDir:TestDir|Test[], prefix=""):Promise<TestResults> {
     if (Array.isArray(testDir)) {
         return Promise.all(testDir.map(test => test.run().catch(err => err instanceof Test.ExecutionError ? err : new Test.ExecutionError(-1, err))))
@@ -96,7 +96,7 @@ function runTests(testDir:TestDir|Test[], prefix=""):Promise<TestResults> {
 type ResultStatus = "pass"|"fail"|"error"|"warning";
 namespace ResultsStatus {
     export function style(str:string, status:ResultStatus) {
-        if (str.startsWith('/')) str = str.endsWith(".ts") ? str.italic : colors.bold(str.italic); // style paths
+        if (str.startsWith('/')) str = str.endsWith(".ts") ? str.italic : colors.bold(str).italic; // style paths
 
         switch (status) {
             case "pass": return str.green;
@@ -107,7 +107,7 @@ namespace ResultsStatus {
     }
 }
 
-function getResultStatus(results:TestResults|ValueAssertion.Result[]|Test.ExecutionError):ResultStatus {
+function getResultStatus(results:TestResults|ValueAssertion.ResultPool|Test.ExecutionError):ResultStatus {
     if (Array.isArray(results)) return results.some(res => res.status === "fail") ? "fail" : "pass";
     else if (results instanceof Test.ExecutionError) return "error";
     else {
@@ -119,15 +119,15 @@ function getResultStatus(results:TestResults|ValueAssertion.Result[]|Test.Execut
 }
 
 
-function logTestResults(results:TestResults|ValueAssertion.Result[]|Test.ExecutionError, logger=console, prefix=""):void {
+function logTestResults(results:TestResults|ValueAssertion.ResultPool|Test.ExecutionError, logger=console, prefix=""):void {
     if (Array.isArray(results)) {
         if (results.length === 0) logger.log(prefix, ResultsStatus.style("- ⚠️ No assertions found", "warning"));
         else results.forEach((res, i) => { // is result from single test
             if (res.status === "pass") {
                 logger.log(prefix, ResultsStatus.style(
                     res.name ?
-                        `${i+1}. ✅ (${res.name}) Passed` :
-                        `${i+1}. ✅ Passed`,
+                        `${i+1}. ✅ (${res.name})` :
+                        `${i+1}. ✅`,
                     "pass"
                 ));
     
@@ -136,8 +136,8 @@ function logTestResults(results:TestResults|ValueAssertion.Result[]|Test.Executi
                 prefix,
                 ResultsStatus.style(
                     res.name ?
-                        `${i + 1}. ❌ (${res.name}) Failed - ${res.reason}` :
-                        `${i + 1}. ❌ Failed - ${res.reason}`,
+                        `${i + 1}. ❌ (${res.name}) - ${res.reason}` :
+                        `${i + 1}. ❌ - ${res.reason}`,
                     "fail"
                 )
             );
