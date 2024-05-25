@@ -3,7 +3,7 @@ import * as fs from "node:fs"
 import Config from "./lib/Config";
 import colors from "colors";
 import Test from "./lib/Test";
-import { ValueAssertion } from "./lib/assertions";
+import ValueAssertion from "./lib/ValueAssertion";
 import console from "node:console";
 import path from "node:path";
 colors.enable();

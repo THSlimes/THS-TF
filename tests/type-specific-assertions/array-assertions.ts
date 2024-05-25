@@ -9,10 +9,10 @@ export const test1 = new Test("Containment assertions", expect => {
 });
 
 export const test2 = new Test("Assertions on elements", expect => {
-    expect([1, 2, 3]).forAllElements(e => e.toBeAtMost(3));
-    expect([1, 2, 3]).forSomeElements(e => e.toBeGreaterThan(2));
+    expect([1, 2, 3]).named().forAllElements(e => e.named().toBeAtMost(3));
+    expect([1, 2, 3]).named().forSomeElements(e => e.named().toBeGreaterThan(2));
 });
 
 export const test3 = new Test("Other assertions", expect => {
-    expect([1, 2, 3]).toBeOfLength(3);
+    expect([1, 2, 3]).named().toBeOfLength(3);
 });

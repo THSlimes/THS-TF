@@ -1,4 +1,11 @@
-import { ExpectFunction, ValueAssertion } from "./assertions";
+import ValueAssertion from "./ValueAssertion";
+import ArrayValueAssertion from "./typed-assertions/ArrayValueAssertion";
+import BigintValueAssertion from "./typed-assertions/BigintValueAssertion";
+import { ArgumentFunctionValueAssertion, NoArgumentFunctionValueAssertion } from "./typed-assertions/FunctionValueAssertion";
+import NumberValueAssertion from "./typed-assertions/NumberValueAssertion";
+import ObjectValueAssertion from "./typed-assertions/ObjectValueAssertion";
+import StringValueAssertion from "./typed-assertions/StringValueAssertion";
+import { isArgumentFunction, isNoArgumentFunction } from "./util-functions";
 
 class Test {
 
@@ -11,7 +18,7 @@ class Test {
     }
 
     public run():Promise<ValueAssertion.ResultPool> {
-        const [expect, pool] = ExpectFunction.get();
+        const [expect, pool] = Test.ExpectFunction.get();
 
         return new Promise(async (resolve, reject) => {
             try {
@@ -43,6 +50,41 @@ namespace Test {
         }
 
     }
+
+    export type ValueAssertionFor<T> =
+        T extends boolean ? ValueAssertion<boolean> :
+        T extends number ? NumberValueAssertion :
+        T extends bigint ? BigintValueAssertion :
+        T extends string ? StringValueAssertion :
+        T extends Array<infer E> ? ArrayValueAssertion<E> :
+        T extends ()=>infer O ? NoArgumentFunctionValueAssertion<O> :
+        T extends (...args:infer A)=>infer O ? { withArgs(...args:A):ArgumentFunctionValueAssertion<A,O> } :
+        T extends object ? ObjectValueAssertion<T> :
+            ValueAssertion<T>;
+
+    export type ExpectFunction = <T>(val:T)=>ValueAssertionFor<T>;
+    export namespace ExpectFunction {
+    
+        /** Creates an [ExpectFunction,ValueAssertion.ResultPool] pair */
+        export function get():[ExpectFunction,ValueAssertion.ResultPool] {
+            const pool:ValueAssertion.ResultPool = [];
+            return [
+                <T>(val:T) => (
+                    typeof val === "number" ? new NumberValueAssertion(val, pool) :
+                    typeof val === "bigint" ? new BigintValueAssertion(val, pool) :
+                    typeof val === "string" ? new StringValueAssertion(val, pool) :
+                    Array.isArray(val) ? new ArrayValueAssertion(val, pool) :
+                    isNoArgumentFunction(val) ? new NoArgumentFunctionValueAssertion(val, pool) :
+                    isArgumentFunction(val) ? { withArgs:(...args:any[]) => new ArgumentFunctionValueAssertion(val, args, pool) } :
+                    typeof val === "object" && val !== null ? new ObjectValueAssertion(val, pool) :
+                    new ValueAssertion(val, pool)
+                ) as ValueAssertionFor<T>,
+                pool
+            ];
+        }
+    
+    }
+            
 
 }
 
