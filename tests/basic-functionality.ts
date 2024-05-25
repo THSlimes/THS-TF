@@ -4,5 +4,5 @@ export const test1 = new Test("Async test", expect => new Promise((resolve, reje
     setTimeout(() => {
         expect(true).toBe(true);
         resolve();
-    }, 2000);
+    }, 250);
 }));

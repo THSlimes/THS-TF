@@ -123,21 +123,20 @@ function logTestResults(results:TestResults|ValueAssertion.ResultPool|Test.Execu
     if (Array.isArray(results)) {
         if (results.length === 0) logger.log(prefix, ResultsStatus.style("- ⚠️ No assertions found", "warning"));
         else results.forEach((res, i) => { // is result from single test
+            const point = results.length === 1 ? "-" : `${i+1}.`;
             if (res.status === "pass") {
-                logger.log(prefix, ResultsStatus.style(
-                    res.name ?
-                        `${i+1}. ✅ (${res.name})` :
-                        `${i+1}. ✅`,
-                    "pass"
-                ));
+                let str = `${point} ✅`;
+                if (res.name) str += ` (${res.name})`;
+                if (res.note) str += ` - ${res.note}`;
+                logger.log(prefix, ResultsStatus.style(str, "pass"));
     
             }
             else logger.log(
                 prefix,
                 ResultsStatus.style(
                     res.name ?
-                        `${i + 1}. ❌ (${res.name}) - ${res.reason}` :
-                        `${i + 1}. ❌ - ${res.reason}`,
+                        `${point} ❌ (${res.name}) - ${res.reason}` :
+                        `${point} ❌ - ${res.reason}`,
                     "fail"
                 )
             );
