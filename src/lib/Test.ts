@@ -1,6 +1,7 @@
 import ValueAssertion from "./ValueAssertion";
 import ArrayValueAssertion from "./typed-assertions/ArrayValueAssertion";
 import BigintValueAssertion from "./typed-assertions/BigintValueAssertion";
+import DateValueAssertion from "./typed-assertions/DateValueAssertion";
 import { ArgumentFunctionValueAssertion, NoArgumentFunctionValueAssertion } from "./typed-assertions/FunctionValueAssertion";
 import NumberValueAssertion from "./typed-assertions/NumberValueAssertion";
 import ObjectValueAssertion from "./typed-assertions/ObjectValueAssertion";
@@ -59,6 +60,7 @@ namespace Test {
         T extends Array<infer E> ? ArrayValueAssertion<E> :
         T extends ()=>infer O ? NoArgumentFunctionValueAssertion<O> :
         T extends (...args:infer A)=>infer O ? { withArgs(...args:A):ArgumentFunctionValueAssertion<A,O> } :
+        T extends Date ? DateValueAssertion :
         T extends object ? ObjectValueAssertion<T> :
             ValueAssertion<T>;
 
@@ -76,6 +78,7 @@ namespace Test {
                     Array.isArray(val) ? new ArrayValueAssertion(val, pool) :
                     isNoArgumentFunction(val) ? new NoArgumentFunctionValueAssertion(val, pool) :
                     isArgumentFunction(val) ? { withArgs:(...args:any[]) => new ArgumentFunctionValueAssertion(val, args, pool) } :
+                    val instanceof Date ? new DateValueAssertion(val, pool) :
                     typeof val === "object" && val !== null ? new ObjectValueAssertion(val, pool) :
                     new ValueAssertion(val, pool)
                 ) as ValueAssertionFor<T>,

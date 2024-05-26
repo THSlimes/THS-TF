@@ -81,9 +81,7 @@ class ValueAssertion<T> {
                     && val.length === expected.length
                     && val.every((e, i) => ValueAssertion.deepEquals(e, expected[i]));
             }
-            else if (val instanceof Date) {
-                return expected instanceof Date && val.getTime() == expected.getTime();
-            }
+            else if (val instanceof Date) return expected instanceof Date && val.getTime() == expected.getTime();
             else {
                 const valKeys = Object.keys(val);
                 const expectedKeys = Object.keys(expected);

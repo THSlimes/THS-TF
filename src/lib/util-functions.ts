@@ -10,6 +10,19 @@ export function isPrime(n: number | bigint): true | number {
     }
 }
 
+export function dateIsValid(d:Date):boolean {
+    return !isNaN(d.getTime());
+}
+
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+export function getMonthName(n:number|Date) {
+    if (n instanceof Date) n = n.getMonth() + 1;
+
+    if (n < 1 || n > MONTH_NAMES.length) throw new RangeError(`month number must be in [1, ${MONTH_NAMES.length}]`);
+    else if (n % 1 !== 0) throw new TypeError("month number must be an integer");
+    else return MONTH_NAMES[n - 1];
+}
+
 /** Template tag to format expressions in a human-readable way. */
 export function format(strings: TemplateStringsArray, ...exps: any[]): string {
     let out = "";
@@ -31,6 +44,29 @@ export namespace format {
                 return `[${val.map(v => format.single(v)).join(", ")}]`;
             }
             else if (val instanceof RegExp) return val.toString();
+            else if (val instanceof Date) {
+                if (!dateIsValid(val)) return "<Invalid Date>";
+
+                let out = `${getMonthName(val)} ${format.nth(val.getDate())} ${val.getFullYear()}`;
+
+                const [h, m, s, ms] = [val.getHours(), val.getMinutes(), val.getSeconds(), val.getMilliseconds()];
+                if (h || m || s || ms) {
+                    out += ` ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                    if (s || ms) {
+                        out += `:${s.toString().padStart(2, '0')}`;
+                        if (ms) out += `.${ms.toString().padStart(3, '0')}`;
+                    }
+                }
+
+                const tzo = -val.getTimezoneOffset();
+                if (tzo !== 0) {
+                    const tzoMinutes = tzo % 60;
+                    const tzoHours = (tzo - tzoMinutes)/60;
+                    out += ` UTC${tzo > 0 ? '+' : '-'}${Math.abs(tzoHours).toString().padStart(2, '0')}:${tzoMinutes.toString().padStart(2, '0')}`;
+                }
+
+                return out;
+            }
             else {
                 const entries = Object.entries(val).map(([k, v]) => `${single(k)}: ${single(v)}`);
                 return `{ ${entries.join(", ")} }`;
@@ -51,6 +87,17 @@ export namespace format {
         if (formatted.length === 0) return "";
         else if (formatted.length === 1) return formatted[0];
         else return formatted.slice(0, formatted.length - 1).join(delimiter) + lastDelimiter + formatted.at(-1);
+    }
+
+    export function nth(n:number): string {
+        const lastNum = Math.floor(n).toString().slice(-1);
+
+        switch (lastNum) {
+            case '1': return `${n}st`;
+            case '2': return `${n}nd`;
+            case '3': return `${n}rd`;
+            default: return `${n}th`;
+        }
     }
 }
 
