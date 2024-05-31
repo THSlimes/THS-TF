@@ -8,6 +8,10 @@ import ObjectValueAssertion from "./typed-assertions/ObjectValueAssertion";
 import StringValueAssertion from "./typed-assertions/primitives/StringValueAssertion";
 import { isArgumentFunction, isNoArgumentFunction } from "./util-functions";
 import SetValueAssertion from "./typed-assertions/collections/SetValueAssertion";
+import Uint8ArrayValueAssertion from "./typed-assertions/collections/type-arrays/Uint8ArrayValueAssertions";
+import Float64ArrayValueAssertion from "./typed-assertions/collections/type-arrays/Float64ArrayValueAssertion";
+import Uint32ArrayValueAssertion from "./typed-assertions/collections/type-arrays/Uint32ArrayValueAssertion";
+import Uint16ArrayValueAssertion from "./typed-assertions/collections/type-arrays/Uint16ArrayValueAssertion";
 
 class Test {
 
@@ -60,6 +64,10 @@ namespace Test {
         T extends string ? StringValueAssertion :
         T extends Array<infer E> ? ArrayValueAssertion<E> :
         T extends Set<infer E> ? SetValueAssertion<E> :
+        T extends Uint8Array ? Uint8ArrayValueAssertion :
+        T extends Uint16Array ? Uint16ArrayValueAssertion :
+        T extends Uint32Array ? Uint32ArrayValueAssertion :
+        T extends Float64Array ? Float64ArrayValueAssertion :
         T extends ()=>infer O ? NoArgumentFunctionValueAssertion<O> :
         T extends (...args:infer A)=>infer O ? { withArgs(...args:A):ArgumentFunctionValueAssertion<A,O> } :
         T extends Date ? DateValueAssertion :
@@ -79,6 +87,10 @@ namespace Test {
                     typeof val === "string" ? new StringValueAssertion(val, pool) :
                     Array.isArray(val) ? new ArrayValueAssertion(val, pool) :
                     val instanceof Set ? new SetValueAssertion(val, pool) :
+                    val instanceof Uint8Array ? new Uint8ArrayValueAssertion(val, pool) :
+                    val instanceof Uint16Array ? new Uint16ArrayValueAssertion(val, pool) :
+                    val instanceof Uint32Array ? new Uint32ArrayValueAssertion(val, pool) :
+                    val instanceof Float64Array ? new Float64ArrayValueAssertion(val, pool) :
                     isNoArgumentFunction(val) ? new NoArgumentFunctionValueAssertion(val, pool) :
                     isArgumentFunction(val) ? { withArgs:(...args:any[]) => new ArgumentFunctionValueAssertion(val, args, pool) } :
                     val instanceof Date ? new DateValueAssertion(val, pool) :
