@@ -1,4 +1,4 @@
-import Test from "../../src/lib/Test";
+import Test from "../../../src/lib/Test";
 
 export const test1 = new Test("Comparing strings", expect => {
     expect("aaa").named().toComeBefore("zzz");

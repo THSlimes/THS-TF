@@ -1,4 +1,4 @@
-import Test from "../../src/lib/Test";
+import Test from "../../../src/lib/Test";
 
 export const test1 = new Test("Less than (or equal to)", expect => {
     expect(1).named().toBeLessThan(2);

@@ -51,6 +51,8 @@ function findTests(dirPath:string):Promise<TestDir> {
         else if (stat.isFile() && filename.endsWith(".ts") || filename.endsWith(".js")) {
             return import(filepath)
                 .then(res => {
+                    console.log(res);
+                    
                     const tests:Test[] = [];
                     for (const exp of Object.values(res)) {
                         if (exp instanceof Test) tests.push(exp);

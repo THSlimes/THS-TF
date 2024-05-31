@@ -1,6 +1,6 @@
-import ValueAssertion from "../ValueAssertion";
-import Test from "../Test";
-import { format } from "../util-functions";
+import ValueAssertion from "../../ValueAssertion";
+import Test from "../../Test";
+import { format } from "../../util-functions";
 
 export default class ArrayValueAssertion<T> extends ValueAssertion<T[]> {
 
@@ -26,21 +26,10 @@ export default class ArrayValueAssertion<T> extends ValueAssertion<T[]> {
         return this.addToResults(
             nonContained.length === 0 ?
                 { status: "pass" } :
-                { status: "fail", reason: `array doesn't contain ${format.sequence(nonContained)}` }
+                { status: "fail", reason: `array doesn't contain ${format.sequence(nonContained, ',', "and")}` }
         );
     }
 
-    public toContainSomeOf(...elements: T[]) {
-        // remove duplicates
-        elements = elements.filter((e1, i) => i >= elements.findLastIndex(e2 => ArrayValueAssertion.deepEquals(e1, e2)));
-
-        this.autoName = `given array contains ${format.sequence(elements, undefined, " or ")}`;
-        return this.addToResults(
-            elements.some(e => this.val.some(v => ArrayValueAssertion.deepEquals(e, v))) ?
-                { status: "pass" } :
-                { status: "fail", reason: `array does not contain ${format.sequence(elements, undefined, " nor ")}` }
-        );
-    }
 
     public forAllElements(assertion: (e: Test.ValueAssertionFor<T>, i: number, arr: T[]) => boolean) {
         const [expect, pool] = Test.ExpectFunction.get();
@@ -58,6 +47,18 @@ export default class ArrayValueAssertion<T> extends ValueAssertion<T[]> {
                 reason: format`element #${firstFailIndex + 1} (${this.val[firstFailIndex]}) failed: ${failureCase.reason}`
             });
         }
+    }
+
+    public toContainSomeOf(...elements: T[]) {
+        // remove duplicates
+        elements = elements.filter((e1, i) => i >= elements.findLastIndex(e2 => ArrayValueAssertion.deepEquals(e1, e2)));
+
+        this.autoName = `given array contains ${format.sequence(elements, undefined, " or ")}`;
+        return this.addToResults(
+            elements.some(e => this.val.some(v => ArrayValueAssertion.deepEquals(e, v))) ?
+                { status: "pass" } :
+                { status: "fail", reason: `array does not contain ${format.sequence(elements, undefined, " nor ")}` }
+        );
     }
 
     public forSomeElements(assertion: (e: Test.ValueAssertionFor<T>, i: number, arr: T[]) => boolean) {
@@ -83,6 +84,35 @@ export default class ArrayValueAssertion<T> extends ValueAssertion<T[]> {
                 { status: "pass" } :
                 { status: "fail", reason: format`expected array to be of length ${expectedLength}, but ${this.val} has ${this.val.length}` }
         );
+    }
+
+    public toContainSequence(sequence: T[]) {
+        this.autoName = `given array contains ${format.sequence(sequence, ',', ',')}`;
+        if (sequence.length === 0) {
+            this.autoName = `given array contains empty sequence`;
+            return this.addToResults({status: "pass", note: "sequence is empty"});
+        }
+        else if (sequence.length === this.val.length) {
+            return this.addToResults(
+                ArrayValueAssertion.deepEquals(sequence, this.val) ?
+                    { status: "pass", note: "array is sequence" } :
+                    { status: "fail", reason: "array does not contain sequence" }
+            );
+        }
+        else if (sequence.length > this.val.length) return this.addToResults({
+            status: "fail",
+            reason: format`array of length ${this.val.length} can not contain sequence of length ${sequence.length}`
+        });
+
+        for (let i = 0; i < this.val.length - sequence.length; i ++) { // try to find sequence
+            if (ArrayValueAssertion.deepEquals(this.val.slice(i, i + sequence.length), sequence)) return this.addToResults({
+                status: "pass",
+                note: format`sequence is at indices ${i}-${i+sequence.length-1}`
+            });
+        }
+        
+        // sequence wasn't found
+        return this.addToResults({ status: "fail", reason: "array does not contain sequence" });
     }
 
 }

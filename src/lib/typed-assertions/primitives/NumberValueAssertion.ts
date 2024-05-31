@@ -1,6 +1,6 @@
-import ValueAssertion from "../ValueAssertion";
-import { format } from "../util-functions";
-import { isPrime } from "../util-functions";
+import ValueAssertion from "../../ValueAssertion";
+import { format } from "../../util-functions";
+import { isPrime } from "../../util-functions";
 
 export default class NumberValueAssertion extends ValueAssertion<number> {
 

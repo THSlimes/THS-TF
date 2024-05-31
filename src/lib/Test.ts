@@ -1,12 +1,13 @@
 import ValueAssertion from "./ValueAssertion";
-import ArrayValueAssertion from "./typed-assertions/ArrayValueAssertion";
-import BigintValueAssertion from "./typed-assertions/BigintValueAssertion";
+import ArrayValueAssertion from "./typed-assertions/collections/ArrayValueAssertion";
+import BigintValueAssertion from "./typed-assertions/primitives/BigintValueAssertion";
 import DateValueAssertion from "./typed-assertions/DateValueAssertion";
 import { ArgumentFunctionValueAssertion, NoArgumentFunctionValueAssertion } from "./typed-assertions/FunctionValueAssertion";
-import NumberValueAssertion from "./typed-assertions/NumberValueAssertion";
+import NumberValueAssertion from "./typed-assertions/primitives/NumberValueAssertion";
 import ObjectValueAssertion from "./typed-assertions/ObjectValueAssertion";
-import StringValueAssertion from "./typed-assertions/StringValueAssertion";
+import StringValueAssertion from "./typed-assertions/primitives/StringValueAssertion";
 import { isArgumentFunction, isNoArgumentFunction } from "./util-functions";
+import SetValueAssertion from "./typed-assertions/collections/SetValueAssertion";
 
 class Test {
 
@@ -58,6 +59,7 @@ namespace Test {
         T extends bigint ? BigintValueAssertion :
         T extends string ? StringValueAssertion :
         T extends Array<infer E> ? ArrayValueAssertion<E> :
+        T extends Set<infer E> ? SetValueAssertion<E> :
         T extends ()=>infer O ? NoArgumentFunctionValueAssertion<O> :
         T extends (...args:infer A)=>infer O ? { withArgs(...args:A):ArgumentFunctionValueAssertion<A,O> } :
         T extends Date ? DateValueAssertion :
@@ -76,6 +78,7 @@ namespace Test {
                     typeof val === "bigint" ? new BigintValueAssertion(val, pool) :
                     typeof val === "string" ? new StringValueAssertion(val, pool) :
                     Array.isArray(val) ? new ArrayValueAssertion(val, pool) :
+                    val instanceof Set ? new SetValueAssertion(val, pool) :
                     isNoArgumentFunction(val) ? new NoArgumentFunctionValueAssertion(val, pool) :
                     isArgumentFunction(val) ? { withArgs:(...args:any[]) => new ArgumentFunctionValueAssertion(val, args, pool) } :
                     val instanceof Date ? new DateValueAssertion(val, pool) :

@@ -1,8 +1,8 @@
-import ArrayValueAssertion from "./typed-assertions/ArrayValueAssertion";
-import BigintValueAssertion from "./typed-assertions/BigintValueAssertion";
-import NumberValueAssertion from "./typed-assertions/NumberValueAssertion";
+import ArrayValueAssertion from "./typed-assertions/collections/ArrayValueAssertion";
+import BigintValueAssertion from "./typed-assertions/primitives/BigintValueAssertion";
+import NumberValueAssertion from "./typed-assertions/primitives/NumberValueAssertion";
 import ObjectValueAssertion from "./typed-assertions/ObjectValueAssertion";
-import StringValueAssertion from "./typed-assertions/StringValueAssertion";
+import StringValueAssertion from "./typed-assertions/primitives/StringValueAssertion";
 import { ArgumentFunctionValueAssertion } from "./typed-assertions/FunctionValueAssertion";
 import { NoArgumentFunctionValueAssertion } from "./typed-assertions/FunctionValueAssertion";
 import { format } from "./util-functions";
