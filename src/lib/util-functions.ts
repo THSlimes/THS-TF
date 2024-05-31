@@ -40,8 +40,11 @@ export namespace format {
         if (typeof val === "string") return val.length === 1 ? `'${val}'` : `"${val}"`;
         else if (typeof val === "bigint") return `${val}n`;
         else if (typeof val === "object" && val !== null) {
-            if (Array.isArray(val)) {
-                return `[${val.map(v => format.single(v)).join(", ")}]`;
+            if (Array.isArray(val)) return `[${val.map(format.single).join(", ")}]`;
+            else if (val instanceof Set) return `{${[...val.values()].map(format.single).join(", ")}}`;
+            else if (val instanceof Map) {
+                const entries = [...val.entries()].map(([k, v]) => `${single(k)}: ${single(v)}`);
+                return `Map{${entries.join(", ")}}`;
             }
             else if (val instanceof RegExp) return val.toString();
             else if (val instanceof Date) {
@@ -69,7 +72,7 @@ export namespace format {
             }
             else {
                 const entries = Object.entries(val).map(([k, v]) => `${single(k)}: ${single(v)}`);
-                return `{ ${entries.join(", ")} }`;
+                return `{${entries.join(", ")}}`;
             }
         }
         else return String(val);

@@ -12,6 +12,7 @@ import Uint8ArrayValueAssertion from "./typed-assertions/collections/type-arrays
 import Float64ArrayValueAssertion from "./typed-assertions/collections/type-arrays/Float64ArrayValueAssertion";
 import Uint32ArrayValueAssertion from "./typed-assertions/collections/type-arrays/Uint32ArrayValueAssertion";
 import Uint16ArrayValueAssertion from "./typed-assertions/collections/type-arrays/Uint16ArrayValueAssertion";
+import MapValueAssertion from "./typed-assertions/collections/MapValueAssertion";
 
 class Test {
 
@@ -64,6 +65,7 @@ namespace Test {
         T extends string ? StringValueAssertion :
         T extends Array<infer E> ? ArrayValueAssertion<E> :
         T extends Set<infer E> ? SetValueAssertion<E> :
+        T extends Map<infer K,infer V> ? MapValueAssertion<K,V> :
         T extends Uint8Array ? Uint8ArrayValueAssertion :
         T extends Uint16Array ? Uint16ArrayValueAssertion :
         T extends Uint32Array ? Uint32ArrayValueAssertion :
@@ -87,6 +89,7 @@ namespace Test {
                     typeof val === "string" ? new StringValueAssertion(val, pool) :
                     Array.isArray(val) ? new ArrayValueAssertion(val, pool) :
                     val instanceof Set ? new SetValueAssertion(val, pool) :
+                    val instanceof Map ? new MapValueAssertion(val, pool) :
                     val instanceof Uint8Array ? new Uint8ArrayValueAssertion(val, pool) :
                     val instanceof Uint16Array ? new Uint16ArrayValueAssertion(val, pool) :
                     val instanceof Uint32Array ? new Uint32ArrayValueAssertion(val, pool) :
