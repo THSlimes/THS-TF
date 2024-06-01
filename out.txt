@@ -1,0 +1,213 @@
+ /arithmetic-test.ts
+     Addition
+         1. ✓ (1 + 1 = 2)
+         2. ✓ (2 + 2 = 4)
+         3. ✓ (4 + 4 = 8)
+         4. ✓ (8 + 8 = 16)
+         5. ✓ (8 + -2 = 6)
+         6. ✓ (8 + -2 ≠ 10)
+     Subtraction
+         1. ✓ (3 - 2 = 1)
+         2. ✓ (3 - 2 ≠ 2)
+     Multiplication
+         1. ✓ (3 * 5 = 15)
+         2. ✓ (3 * 5 ≠ 20)
+ /basic-functionality.ts
+     Async test
+         - ✓ (value = true)
+ /equality-tests.ts
+     Objects
+         1. ✓ (Equal objects)
+         2. ✓ (Unequal value)
+         3. ✓ (Different key)
+         4. ✓ (Different key (swapped))
+         5. ✓ (Missing key)
+         6. ✓ (Missing key (swapped))
+         7. ✓ (Additional key)
+         8. ✓ (Additional key (swapped))
+     Arrays
+         1. ✓ (Equal arrays)
+         2. ✓ (Unequal arrays)
+         3. ✓ (Fewer entries)
+         4. ✓ (Extra entry)
+     Primitives
+         1. ✓ (Equal numbers)
+         2. ✓ (Unequal numbers)
+         3. ✓ (Equal strings)
+         4. ✓ (Unequal strings)
+         5. ✓ (2 x null)
+         6. ✓ (2 x undefined)
+ /type-specific-assertions
+     /collections
+         /array-assertions.ts
+             Containment assertions
+                 1. ✓ (given array contains 1)
+                 2. ✓ (given array contains 2, 1 and 3)
+                 3. ✓ (given array contains 4, 6, 5 or 2)
+                 4. ✓ (given array contains 5,6,7) : sequence is at indices 5-7
+             Assertions on elements
+                 1. ✓ (for all elements: x ≤ 3)
+                 2. ✓ (for some elements: x > 2)
+             Other assertions
+                 - ✓ (given array is of length 3)
+         /map-assertions.ts
+             Key tests
+                 1. ✓ (given map has key 'a')
+                 2. ✓ (for all keys: undefined)
+                 3. ✓ (for some keys: undefined)
+             Value tests
+                 1. ✓ (given map has value 1)
+                 2. ✓ (for all values: x ≥ 0)
+                 3. ✓ (for some values: x is prime)
+             Entry tests
+                 1. ✓ (given map has 'a' -> 1)
+                 2. ✓ (given map has 3 entries)
+         /set-assertions.ts
+             Containment assertions
+                 1. ✓ (given set contains 1)
+                 2. ✓ (given set contains 2, 1 and 3)
+                 3. ✓ (given set contains 4, 6, 5 or 2)
+             Assertions on elements
+                 1. ✓ (for all elements: x ≤ 3)
+                 2. ✓ (for some elements: x > 2)
+             Other assertions
+                 - ✓ (set has size 3)
+         /typed-arrays
+             /Float64Array-assertions.ts
+                 Containment assertions
+                     1. ✓ (given Float64Array contains 1)
+                     2. ✓ (given Float64Array contains 2, 1 and 3)
+                     3. ✓ (given Float64Array contains 4, 6, 5 or 2)
+                     4. ✓ (given Float64Array contains 5,6,7) : sequence is at indices 5-7
+                 Assertions on elements
+                     1. ✓ (for all entries: x ≤ 3)
+                     2. ✓ (for some entries: x > 2)
+                 Other assertions
+                     - ✓ (given Float64Array is of length 3)
+             /Uint16Array-assertions.ts
+                 Containment assertions
+                     1. ✓ (given Uint16Array contains 1)
+                     2. ✓ (given Uint16Array contains 2, 1 and 3)
+                     3. ✓ (given Uint16Array contains 4, 6, 5 or 2)
+                     4. ✓ (given Uint16Array contains 5,6,7) : sequence is at indices 5-7
+                 Assertions on elements
+                     1. ✓ (for all entries: x ≤ 3)
+                     2. ✓ (for some entries: x > 2)
+                 Other assertions
+                     - ✓ (given Uint16Array is of length 3)
+             /Uint32Array-assertions.ts
+                 Containment assertions
+                     1. ✓ (given Uint32Array contains 1)
+                     2. ✓ (given Uint32Array contains 2, 1 and 3)
+                     3. ✓ (given Uint32Array contains 4, 6, 5 or 2)
+                     4. ✓ (given Uint32Array contains 5,6,7) : sequence is at indices 5-7
+                 Assertions on elements
+                     1. ✓ (for all entries: x ≤ 3)
+                     2. ✓ (for some entries: x > 2)
+                 Other assertions
+                     - ✓ (given Uint32Array is of length 3)
+             /Uint8Array-assertions.ts
+                 Containment assertions
+                     1. ✓ (given Uint8Array contains 1)
+                     2. ✓ (given Uint8Array contains 2, 1 and 3)
+                     3. ✓ (given Uint8Array contains 4, 6, 5 or 2)
+                     4. ✓ (given Uint8Array contains 5,6,7) : sequence is at indices 5-7
+                 Assertions on elements
+                     1. ✓ (for all entries: x ≤ 3)
+                     2. ✓ (for some entries: x > 2)
+                 Other assertions
+                     - ✓ (given Uint8Array is of length 3)
+     /date-specific.ts
+         Comparing Dates
+             1. ✓ (given Date is after May 25th 2024 12:35:01.050 UTC+02:00)
+             2. ✓ (given Date is before May 27th 2024 15:15:15.015 UTC+02:00)
+         Validity test
+             1. ✓ (given Date is valid)
+             2. ✓ (given Date is invalid)
+         Date test
+             1. ✓ (Date falls on a 14th of February)
+             2. ✓ (for all elements: Date falls on a 14th)
+             3. ✓ (Date falls on December 25th 2024)
+         Time test
+             1. ✓ (Date is at 12:00:00.000)
+             2. ✓ (Date is at 15:30)
+             3. ✓ (for all elements: Date is at 15:XX)
+     /failing-tests.ts
+         Failing test
+             1. ✗ : expected value to be false, but was actually true
+             2. ✗ : expected value to be 2, but was actually 1
+             3. ✓
+             4. ✗ : expected value to be 2, but was actually 1
+             5. ✗ : expected value to be false, but was actually true
+             6. ✗ : expected value to be 2, but was actually 1
+             7. ✓
+             8. ✗ : expected value to be 2, but was actually 1
+     /function-specific.ts
+         Non-argument function
+             - ✓ (f() = 1)
+         Argument function
+             1. ✓ (f(1) = 1)
+             2. ✓ (f(2) = 4)
+         Timing tests
+             1. ✓ (f() takes ≤ 10μs) : took 0.154μs
+             2. ✓ (f() takes ≤ 2ms) : took 0.852ms
+         Throw detection
+             1. ✓ (throwIfNeg(-1) throws Error)
+             2. ✓ (throwIfNeg(-1) throws RangeError)
+             3. ✓ (throwIfNeg(-1) throws Error{message: "n is negative"})
+             4. ✓ (throwIfNeg(-1) throws Error{message ≈ /negative/g})
+             5. ✓ (throwIfNeg(-1) throws Error{cause: -1})
+             6. ✓ (throwIfNeg(-1) throws Error{message ≈ /is negative/g, cause: -1})
+     /generic-object-assertions.ts
+         Key tests
+             1. ✓ (given object has key 'a')
+             2. ✓ (for all keys: undefined)
+             3. ✓ (for some keys: undefined)
+         Value tests
+             1. ✓ (given object has value 1)
+             2. ✓ (for all values: x ≥ 0)
+             3. ✓ (for some values: x is prime)
+         Entry tests
+             1. ✓ (given object has 'a' -> 1)
+             2. ✓ (given object has 3 entries)
+     /primitives
+         /bigint-assertions.ts
+             Less than (or equal to)
+                 1. ✓ (n < 2n)
+                 2. ✓ (n ≤ 2n)
+                 3. ✓ (n ≤ 2n)
+             Greater than (or equal to)
+                 1. ✓ (n > 1n)
+                 2. ✓ (n ≥ 1n)
+                 3. ✓ (n ≥ 1n)
+             Divisibility
+                 1. ✓ (37n divides n)
+                 2. ✓ (n divides 111n)
+                 3. ✓ (n is prime)
+                 4. ✓ (n is composite)
+         /number-assertions.ts
+             Less than (or equal to)
+                 1. ✓ (x < 2)
+                 2. ✓ (x ≤ 2)
+                 3. ✓ (x ≤ 2)
+             Greater than (or equal to)
+                 1. ✓ (x > 1)
+                 2. ✓ (x ≥ 1)
+                 3. ✓ (x ≥ 1)
+             Divisibility
+                 1. ✓ (x is an integer)
+                 2. ✓ (37 divides x)
+                 3. ✓ (value divides 111)
+                 4. ✓ (x is prime)
+                 5. ✓ (x is composite)
+         /string-assertions.ts
+             Comparing strings
+                 1. ✓ (given string comes before "zzz")
+                 2. ✓ (given string comes after "aaa")
+             String formats
+                 1. ✓ (given string is numeric)
+                 2. ✓ (given string is numeric)
+                 3. ✓ (given string is base-16 numeric )
+                 4. ✓ (given string contains "ello")
+                 5. ✓ (given string is palindromic)
+                 6. ✓ (given string matches /[A-Z]+/g)

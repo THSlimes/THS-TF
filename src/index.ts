@@ -1,12 +1,11 @@
-import "node:process";
 import * as fs from "node:fs"
-import Config, { StyledOutputLogger } from "./lib/Config";
+import Config, { FilePrinter, StyledOutputLogger } from "./lib/Config";
 import Test from "./lib/Test";
 import ValueAssertion from "./lib/ValueAssertion";
 import console from "node:console";
 import path from "node:path";
 
-const KNOWN_CMD_ARGS = new Set(["--dir", "-d", "--verbose", "-v", "--strict", "-s"]);
+const KNOWN_CMD_ARGS = new Set(["--dir", "-d", "--verbose", "-v", "--strict", "-s", "--outfile", "-o"]);
 
 /**
  * Gets the named command line arguments of the current process.
@@ -163,9 +162,11 @@ function doTests(settings:Config.Settings):Promise<void> {
 /** Mapping of named command line arguments to their value. */
 const CMD_ARGS = getNamedCommandLineArguments();
 
+const outFilePath = CMD_ARGS["-o"] ?? CMD_ARGS["--outfile"];
+
 /** Output settings extrapolated from the given command line arguments. */
 const OUTPUT_SETTINGS:Config.OutputSettings = {
-    printer: console,
+    printer: outFilePath === undefined ? console : new FilePrinter(outFilePath || "out.txt", true),
     verbose: "--verbose" in CMD_ARGS || "-v" in CMD_ARGS,
     strict: "--strict" in CMD_ARGS || "-s" in CMD_ARGS
 };
@@ -174,7 +175,7 @@ const OUTPUT_SETTINGS:Config.OutputSettings = {
 const TEST_SETTINGS:Config.Settings = {
     testDir: CMD_ARGS["--dir"] ?? CMD_ARGS["-d"] ?? "./tests",
     outputSettings: OUTPUT_SETTINGS,
-    logger: new StyledOutputLogger(console, OUTPUT_SETTINGS)
+    logger: new StyledOutputLogger(OUTPUT_SETTINGS.printer, OUTPUT_SETTINGS)
 };
 
 doTests(TEST_SETTINGS);

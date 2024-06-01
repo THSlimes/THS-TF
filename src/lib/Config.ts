@@ -1,5 +1,9 @@
+import fs from "fs";
+import path from "path";
 import colors from "colors";
+
 import Test from "./Test";
+
 colors.enable();
 
 /** A Printer represents something which may output information in some way (e.g. by logging it to the console). */
@@ -8,6 +12,52 @@ interface Printer {
     warn(message?: any, ...optionalParams: any[]): void;
     error(message?: any, ...optionalParams: any[]): void;
 };
+
+export class FilePrinter implements Printer {
+
+    private doOverwrite:boolean;
+    private readonly filepath:string;
+
+    public constructor(filepath:string, doOverwrite=false) {
+        if (!path.isAbsolute(filepath)) filepath = path.normalize(`${process.cwd()}/${filepath}`); // make path absolute
+
+        this.filepath = filepath;
+        this.doOverwrite = doOverwrite;
+
+        const dirName = path.dirname(this.filepath);
+        if (!fs.existsSync(dirName)) fs.mkdirSync(dirName, { recursive: true });
+    }
+
+    private tryOverwrite() {
+        if (this.doOverwrite) {
+            fs.writeFileSync(this.filepath, ""); // overwrite file contents
+            this.doOverwrite = false;
+        }
+    }
+
+    log(message?: any, ...optionalParams: any[]): void {
+        const str = [message, ...optionalParams].map(String).join(' ');
+
+        this.tryOverwrite();
+        fs.appendFileSync(this.filepath, str.strip + '\r\n');
+    }
+
+    warn(message?: any, ...optionalParams: any[]): void {
+        const str = [message, ...optionalParams].map(String).join(' ');
+
+        this.tryOverwrite();
+        fs.appendFileSync(this.filepath, str.strip + '\r\n');
+    }
+
+    error(message?: any, ...optionalParams: any[]): void {
+        const str = [message, ...optionalParams].map(String).join(' ');
+
+        this.tryOverwrite();
+        fs.appendFileSync(this.filepath, str.strip + '\r\n');
+    }
+
+
+}
 
 type HasResultLoggers = {[s in Test.Result]: (message?: any, ...optionalParams: any[]) => void};
 abstract class OutputLogger implements HasResultLoggers {
@@ -43,7 +93,7 @@ export class StyledOutputLogger extends OutputLogger {
 
     private splitWhitespace(str:string):[string, string] {
         let i = 0;
-        while (i < str.length - 1 && str.substring(0, i + 1).trim().length === 0) i ++;        
+        while (i < str.length - 1 && str.substring(0, i + 1).trim().length === 0) i ++;
 
         return [str.substring(0, i), str.substring(i)];
     }
