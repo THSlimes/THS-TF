@@ -105,33 +105,42 @@ function getResultStatus(results:TestResults|ValueAssertion.ResultPool|Test.Exec
 
 function logTestResults(results:TestResults|ValueAssertion.ResultPool|Test.ExecutionError, settings:Config.Settings, prefix=""):void {
     const logger = settings.logger;
-    if (Array.isArray(results)) {
-        if (results.length === 0) logger.warning(prefix, "- ⚠️ No assertions found", "warning");
+    if (Array.isArray(results)) { // is list of assertion results
+        if (results.length === 0) logger.warning(prefix, "- ! No assertions found", "warning");
         else results.forEach((res, i) => { // is result from single test
             const point = results.length === 1 ? "-" : `${i+1}.`;
             if (res.status === "pass") {
-                let str = `${point} ✅`;
-                if (res.name) str += ` (${res.name})`;
-                if (res.note) str += ` - ${res.note}`;
-                logger.pass(prefix, str);
-    
+                if (settings.outputSettings.verbose) { // only log passes when verbose
+                    let str = `${point} ✓`;
+                    if (res.name) str += ` (${res.name})`;
+                    if (res.note) str += ` : ${res.note}`;
+                    logger.pass(prefix, str);
+                }
             }
-            else logger.error(
+            else logger.fail(
                 prefix,
                 res.name ?
-                    `${point} ❌ (${res.name}) - ${res.reason}` :
-                    `${point} ❌ - ${res.reason}`
+                    `${point} ✗ (${res.name}) : ${res.reason}` :
+                    `${point} ✗ : ${res.reason}`
             );
         });
     }
-    else if (results instanceof Test.ExecutionError) {
+    else if (results instanceof Test.ExecutionError) { // test encountered unexpected error
         logger.error(prefix, `- ⛔ Stopped at assertion #${results.assertionIndex + 1} (${results.message})`);
     }
-    else for (const name in results) {
+    else for (const name in results) { // is object with nested results
         const val = results[name];
+        const status = getResultStatus(val);
 
-        logger.log(getResultStatus(val), prefix, name);
-        logTestResults(val, settings, prefix + "    ");
+        if (settings.outputSettings.verbose || status !== "pass") { // log everything
+            logger.log(getResultStatus(val), prefix, name);
+            logTestResults(val, settings, prefix + "    ");
+        }
+        else {
+            if (status === "pass") logger.pass(prefix, name);
+            else logger.log(status, prefix, name);
+        }
+
     }
 }
 
