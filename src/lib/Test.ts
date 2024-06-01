@@ -42,6 +42,8 @@ class Test {
 
 namespace Test {
 
+    export type Result = "pass" | "fail" | "error" | "warning";
+
     export type Function = (expect:ExpectFunction)=>void|PromiseLike<void>;
 
     export class ExecutionError extends Error {

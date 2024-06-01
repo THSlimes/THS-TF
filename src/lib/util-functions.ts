@@ -1,3 +1,5 @@
+export type ToStringable = { toString():string };
+
 export function isPrime(n: number | bigint): true | number {
     if (typeof n === "bigint") n = Number(n);
 

@@ -1,13 +1,5 @@
-import ArrayValueAssertion from "./typed-assertions/collections/ArrayValueAssertion";
-import BigintValueAssertion from "./typed-assertions/primitives/BigintValueAssertion";
-import NumberValueAssertion from "./typed-assertions/primitives/NumberValueAssertion";
-import ObjectValueAssertion from "./typed-assertions/ObjectValueAssertion";
-import StringValueAssertion from "./typed-assertions/primitives/StringValueAssertion";
-import { ArgumentFunctionValueAssertion } from "./typed-assertions/FunctionValueAssertion";
-import { NoArgumentFunctionValueAssertion } from "./typed-assertions/FunctionValueAssertion";
-import { format } from "./util-functions";
+import { format, ToStringable } from "./util-functions";
 
-type ToStringable = { toString():string };
 /**
  * `ValueAssertion` is a base class that handles checking certain properties of their value.
  * @param T type of value to check
